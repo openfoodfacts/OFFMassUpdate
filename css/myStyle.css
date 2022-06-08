@@ -35,6 +35,15 @@
   background-size: cover;
 }
 
+/* Firefox support */
+/* https://stackoverflow.com/questions/53831383/chrome-firefox-browser-extensions-css-image-urls-in-content-scripts */
+@supports (-moz-appearance:none) {
+  .massButton { 
+    background-image: url("/img/pen.png");
+  }
+}
+
+
 .massForms{
   background-color: blue;
   opacity: .85;

@@ -30,7 +30,7 @@ var ingredient_popup_template =   "<div class='popup_div'>"
 								+ "<div class='massFormButton close'>Close</div>"
 								+ "</div>";
 
-var api_url = "/cgi/product_jqm2.pl?";
+var api_url = location.protocol + '//' + location.host + "/cgi/product_jqm2.pl?";
 var api_autocomplete_url =  "/cgi/suggest.pl?";
 var sField='packaging';
 var lang='';
