@@ -16,7 +16,8 @@ The extension is now installed, and will appear at the top right, if you are log
   * run it threw the extension directory thanks to web-ext: `web-ext run`
   * build an extension and install it
     * into the extension directory: `web-ext build`
-    * into Firefox enter `about:addons` as the uRL
-    * Menu "install a module from a file" > pick the file generated from the `web-ext build` command
+    * into Firefox enter `about:debugging#/runtime/this-firefox` as the URL
+    * Menu "load a temporary module" > pick the file generated from the `web-ext build` command
+    * redo this operation each time you want to use it
 
 The extension is now installed, and will appear at the top right, if you are logged into your account, in the form of a red button with a white pencil
