@@ -20,4 +20,16 @@ The extension is now installed, and will appear at the top right, if you are log
     * Menu "load a temporary module" > pick the file generated from the `web-ext build` command
     * redo this operation each time you want to use it
 
+* Note: if you want to do the "build" method above without installing npm, you might use docker:
+  * go to the project directory
+  * launch `docker run --rm -ti -v $(pwd):/home/node node:lts-slim bash`
+  * within the container run the following:
+    ```bash
+    cd /home/node
+    npm install --global web-ext
+    web-ext build
+    exit
+    ```
+  * the extension will be inside the `web-ext-artifacts` folder
+
 The extension is now installed, and will appear at the top right, if you are logged into your account, in the form of a red button with a white pencil
