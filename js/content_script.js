@@ -36,11 +36,22 @@ var sField='packaging';
 var lang='';
 var productToUpdate=0;
 
+// Initialize OpenFoodFacts API client
+var offApi = null;
+
 $(document).ready(function(){
 
 if(isConnected()){
 	if($(".products, .search_results").length){
 		lang = $("html").attr("lang")
+		
+		// Initialize OpenFoodFacts API client
+		offApi = new OpenFoodFactsBrowser({
+			country: location.hostname.split('.')[0] === 'world' ? 'world' : location.hostname.split('.')[0],
+			language: lang,
+			baseUrl: location.protocol + '//' + location.host
+		});
+		
 		addingCheckBox();
 		addingIngredientsFormBtn();
 		addingMassButton();
@@ -53,11 +64,20 @@ if(isConnected()){
 			chrome.storage.local.set({"tags":$('#tags').val()});
 		},
 		autocomplete_url: function(request, response) {
-          url = api_autocomplete_url+"lc="+lang+"&tagtype="+sField+"&string="+request.term;
-          $.get(url, function(data){
-              //data = JSON.parse(data);
-              response(data);
-          });
+			if (!offApi) {
+				console.error('OpenFoodFacts API not initialized');
+				response([]);
+				return;
+			}
+			
+			offApi.getSuggestions(sField, request.term)
+				.then(function(data) {
+					response(data || []);
+				})
+				.catch(function(error) {
+					console.error('Error fetching suggestions:', error);
+					response([]);
+				});
 		}
 		}
 		);
@@ -121,17 +141,21 @@ $(".products > li").append("<input class='ingredientsFormBtn' type='button' valu
 }
 
 function addIngredientToForm(product){
-	var api_url = "/api/v0/product/"+product+"?fields=ingredients_text_"+lang;
-	var product_lang_info = "ingredients_text_"+lang;
-	$.getJSON( api_url, function( data ){
-		if(data.product[product_lang_info] !=null){
-			console.log("Json :"+data.product[product_lang_info]);
-			$("#ingredients").val(data.product[product_lang_info]);
-			
-		}
+	if (!offApi) {
+		console.error('OpenFoodFacts API not initialized');
+		return;
 	}
-	);	
-
+	
+	offApi.getProductIngredients(product, lang)
+		.then(function(ingredients) {
+			if (ingredients) {
+				console.log("Ingredients: " + ingredients);
+				$("#ingredients").val(ingredients);
+			}
+		})
+		.catch(function(error) {
+			console.error('Error fetching ingredients:', error);
+		});
 }
 function addingMassButton(){
 	$("body").append("<div class='massUpdater'><div class='massButton'>&nbsp;</div><div class='massForms'>"+form_template+"</div></div>");
@@ -279,41 +303,57 @@ function initValue(){
 }
 
 function sendMassUpdate(){
+	if (!offApi) {
+		console.error('OpenFoodFacts API not initialized');
+		return;
+	}
 
 	var mySelect = $('#champ');
-    var selectedField = mySelect.find(':selected').val()
+    var selectedField = mySelect.find(':selected').val();
 	
-	productToUpdate= $('.massUpdateCheckbox:checked').length;
+	productToUpdate = $('.massUpdateCheckbox:checked').length;
 	
 	$('.massUpdateCheckbox').each(function(){
 		if($(this).is(':checked')){
-			var remote_url = api_url+"code="+$(this).attr("value")+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&"+selectedField+"=";
-			if(sField==='quantity'){
-				remote_url += encodeURIComponent($("#quantity").val());
-			}else{
-				remote_url += encodeURIComponent($('#tags').val());
+			var barcode = $(this).attr("value");
+			var productData = {};
+			
+			// Build product data object
+			if(sField === 'quantity'){
+				productData[selectedField] = $("#quantity").val();
+			} else {
+				productData[selectedField] = $('#tags').val();
 			}
 			
-			console.log("Sending Get request to "+remote_url+"\n");
-			 $.ajax({
-				type: "GET",
-				url: remote_url,
-				
-				success: function (result) {
-					incrSuccessCounter();
+			var updateOptions = {
+				language: lang,
+				comment: chrome.i18n.getMessage("extComment")
+			};
+			
+			console.log("Updating product " + barcode + " with data:", productData);
+			
+			offApi.updateProduct(barcode, productData, updateOptions)
+				.then(function(result) {
+					if (result.success) {
+						incrSuccessCounter();
+					} else {
+						console.error('Update failed:', result.error);
+						incrFailureCounter();
+					}
+					
 					productToUpdate--;
 					updateProductCounter();
-					if(productToUpdate <=0) $('#backButton').show();
-				},
-				error: function(){
+					if(productToUpdate <= 0) $('#backButton').show();
+				})
+				.catch(function(error) {
+					console.error('Update error:', error);
 					incrFailureCounter();
 					productToUpdate--;
 					updateProductCounter();
-					if(productToUpdate <=0) $('#backButton').show();
-				}
-			});
+					if(productToUpdate <= 0) $('#backButton').show();
+				});
 			
-			$(this).prop('checked',false);
+			$(this).prop('checked', false);
 		}
 	
 	

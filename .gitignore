@@ -1,6 +1,10 @@
 # webext created files
 web-ext-artifacts/
 
+# Node.js dependencies
+node_modules/
+package-lock.json
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
