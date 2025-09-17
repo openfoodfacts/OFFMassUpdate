@@ -2,19 +2,25 @@
     "name": "__MSG_extName__",
     "version": "1.0.0",
     "icons": {
-       
+        "16": "img/icon-16.png",
+        "32": "img/icon-32.png", 
+        "48": "img/icon-48.png",
+        "128": "img/icon-128.png"
     },
 
     "description": "__MSG_extDescription__",
 	"default_locale":"fr",
     "permissions": [
+		  "storage",
+		  "clipboardWrite"
+    ],
+    
+    "host_permissions": [
           "*://*.openfoodfacts.net/*",
 		   "*://*.openfoodfacts.org/*",
 	    "*://*.openpetfoodfacts.org/*",
 	    "*://*.openproductsfacts.org/*",
-	    "*://*.openbeautyfacts.org/*",
-		  "storage",
-		  "clipboardWrite"
+	    "*://*.openbeautyfacts.org/*"
     ],
 
     "content_scripts": [
@@ -32,9 +38,12 @@
         }
     ],
 	
-	"web_accessible_resources":[
-		"/img/*"
+	"web_accessible_resources": [
+		{
+			"resources": ["/img/*"],
+			"matches": ["https://*.openfoodfacts.net/*", "https://*.openfoodfacts.org/*", "https://*.openpetfoodfacts.org/*", "https://*.openproductsfacts.org/*", "https://*.openbeautyfacts.org/*"]
+		}
 	],
 
-    "manifest_version": 2
+    "manifest_version": 3
 }
