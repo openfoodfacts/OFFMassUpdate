@@ -74,15 +74,23 @@ if(isConnected()){
 		$('#folksonomy_key').autocomplete({
 			source: function(request, response) {
 				var url = folksonomy_api_url + "/keys";
-				$.get(url, function(data){
-					var filteredData = data.filter(function(item) {
-						return item.k.toLowerCase().indexOf(request.term.toLowerCase()) !== -1;
-					}).map(function(item) {
-						return item.k;
-					});
-					response(filteredData);
-				}).fail(function() {
-					response([]);
+				$.ajax({
+					url: url,
+					type: "GET",
+					xhrFields: {
+						withCredentials: true
+					},
+					success: function(data){
+						var filteredData = data.filter(function(item) {
+							return item.k.toLowerCase().indexOf(request.term.toLowerCase()) !== -1;
+						}).map(function(item) {
+							return item.k;
+						});
+						response(filteredData);
+					},
+					error: function() {
+						response([]);
+					}
 				});
 			},
 			minLength: 0
@@ -97,15 +105,23 @@ if(isConnected()){
 					return;
 				}
 				var url = folksonomy_api_url + "/values/" + encodeURIComponent(key);
-				$.get(url, function(data){
-					var filteredData = data.filter(function(item) {
-						return item.v.toLowerCase().indexOf(request.term.toLowerCase()) !== -1;
-					}).map(function(item) {
-						return item.v;
-					});
-					response(filteredData);
-				}).fail(function() {
-					response([]);
+				$.ajax({
+					url: url,
+					type: "GET",
+					xhrFields: {
+						withCredentials: true
+					},
+					success: function(data){
+						var filteredData = data.filter(function(item) {
+							return item.v.toLowerCase().indexOf(request.term.toLowerCase()) !== -1;
+						}).map(function(item) {
+							return item.v;
+						});
+						response(filteredData);
+					},
+					error: function() {
+						response([]);
+					}
 				});
 			},
 			minLength: 0
@@ -408,6 +424,9 @@ function sendMassUpdate(){
 					url: folksonomy_url,
 					contentType: "application/json",
 					data: JSON.stringify(folksonomy_data),
+					xhrFields: {
+						withCredentials: true
+					},
 					
 					success: function (result) {
 						incrSuccessCounter();
