@@ -104,6 +104,21 @@
 	"backLabel":{
 		"message":"Retour",
 		"description": "Back label"
+	},
+	
+	"folksonomyLabel":{
+		"message":"Propriété Folksonomy",
+		"description":"Folksonomy property label"
+	},
+	
+	"folksonomyKeyLabel":{
+		"message":"Clé de propriété",
+		"description":"Folksonomy key label"
+	},
+	
+	"folksonomyValueLabel":{
+		"message":"Valeur de propriété",
+		"description":"Folksonomy value label"
 	}
 	
 }

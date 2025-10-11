@@ -20,7 +20,8 @@
 		   "*://*.openfoodfacts.org/*",
 	    "*://*.openpetfoodfacts.org/*",
 	    "*://*.openproductsfacts.org/*",
-	    "*://*.openbeautyfacts.org/*"
+	    "*://*.openbeautyfacts.org/*",
+	    "https://api.folksonomy.openfoodfacts.org/*"
     ],
 
     "content_scripts": [

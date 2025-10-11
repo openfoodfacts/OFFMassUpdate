@@ -12,9 +12,16 @@ var form_template = "<div id='form'>"
 					+"				<option value='add_stores' field='stores'>"+chrome.i18n.getMessage('storesLabel')+"</option>"
 					+"				<option value='add_countries' field='countries'>"+chrome.i18n.getMessage('countriesLabel')+"</option>"
 					+"				<option value='quantity' field='quantity'>"+chrome.i18n.getMessage('quantityLabel')+"</option>"
+					+"				<option value='folksonomy' field='folksonomy'>"+chrome.i18n.getMessage('folksonomyLabel')+"</option>"
 				    +"</select>"
 					+"<div id='tagsHidder'><input name='tags' id='tags' value='' /></div>"
 					+"<input name='quantity' id='quantity' type='text' value='' />"
+					+"<div id='folksonomyHidder'>"
+					+"  <div>"+chrome.i18n.getMessage('folksonomyKeyLabel')+"</div>"
+					+"  <input name='folksonomy_key' id='folksonomy_key' type='text' value='' />"
+					+"  <div>"+chrome.i18n.getMessage('folksonomyValueLabel')+"</div>"
+					+"  <input name='folksonomy_value' id='folksonomy_value' type='text' value='' />"
+					+"</div>"
 					+"<div class='massFormButton update'>Update</div>"
 					+"</div>"
 					+"<div id='spinner'>"
@@ -32,6 +39,7 @@ var ingredient_popup_template =   "<div class='popup_div'>"
 
 var api_url = location.protocol + '//' + location.host + "/cgi/product_jqm2.pl?";
 var api_autocomplete_url =  "/cgi/suggest.pl?";
+var folksonomy_api_url = "https://api.folksonomy.openfoodfacts.org";
 var sField='packaging';
 var lang='';
 var productToUpdate=0;
@@ -61,6 +69,47 @@ if(isConnected()){
 		}
 		}
 		);
+		
+		// Folksonomy key autocomplete
+		$('#folksonomy_key').autocomplete({
+			source: function(request, response) {
+				var url = folksonomy_api_url + "/keys";
+				$.get(url, function(data){
+					var filteredData = data.filter(function(item) {
+						return item.k.toLowerCase().indexOf(request.term.toLowerCase()) !== -1;
+					}).map(function(item) {
+						return item.k;
+					});
+					response(filteredData);
+				}).fail(function() {
+					response([]);
+				});
+			},
+			minLength: 0
+		});
+		
+		// Folksonomy value autocomplete based on key
+		$('#folksonomy_value').autocomplete({
+			source: function(request, response) {
+				var key = $('#folksonomy_key').val();
+				if(!key){
+					response([]);
+					return;
+				}
+				var url = folksonomy_api_url + "/values/" + encodeURIComponent(key);
+				$.get(url, function(data){
+					var filteredData = data.filter(function(item) {
+						return item.v.toLowerCase().indexOf(request.term.toLowerCase()) !== -1;
+					}).map(function(item) {
+						return item.v;
+					});
+					response(filteredData);
+				}).fail(function() {
+					response([]);
+				});
+			},
+			minLength: 0
+		});
 		
 		
 	}
@@ -137,6 +186,7 @@ function addingMassButton(){
 	$("body").append("<div class='massUpdater'><div class='massButton'>&nbsp;</div><div class='massForms'>"+form_template+"</div></div>");
 	$('.massForms').hide();
 	$('#spinner').hide();
+	$('#folksonomyHidder').hide();
 	
 	
 	initValue();
@@ -154,6 +204,7 @@ function addingMassButton(){
 			
 			$("#tagsHidder").show();
 			$("#quantity").hide();
+			$("#folksonomyHidder").hide();
 		}
 	
 	});
@@ -170,6 +221,16 @@ function addingMassButton(){
 	$("#quantity").change(function(){
 		var q = $(this).val();
 		chrome.storage.local.set({"quantity":q});
+	});
+	
+	$("#folksonomy_key").change(function(){
+		var k = $(this).val();
+		chrome.storage.local.set({"folksonomy_key":k});
+	});
+	
+	$("#folksonomy_value").change(function(){
+		var v = $(this).val();
+		chrome.storage.local.set({"folksonomy_value":v});
 	});
 	
 	$(".update").click(function(){
@@ -200,9 +261,15 @@ function addingMassButton(){
 		if(sField==='quantity'){
 			$("#tagsHidder").hide();
 			$("#quantity").show();
+			$("#folksonomyHidder").hide();
+		}else if(sField==='folksonomy'){
+			$("#tagsHidder").hide();
+			$("#quantity").hide();
+			$("#folksonomyHidder").show();
 		}else{
 			$("#tagsHidder").show();
 			$("#quantity").hide();
+			$("#folksonomyHidder").hide();
 		
 		}
 	});
@@ -241,9 +308,15 @@ function initValue(){
 		if(sField==='quantity'){
 			$("#tagsHidder").hide();
 			$("#quantity").show();
+			$("#folksonomyHidder").hide();
+		}else if(sField==='folksonomy'){
+			$("#tagsHidder").hide();
+			$("#quantity").hide();
+			$("#folksonomyHidder").show();
 		}else{
 			$("#tagsHidder").show();
 			$("#quantity").hide();
+			$("#folksonomyHidder").hide();
 		
 		}
 		}
@@ -259,6 +332,20 @@ function initValue(){
 	chrome.storage.local.get(['quantity'],function(result){
 		if(result.quantity != null){
 			$('#quantity').val(result.quantity);
+		}
+	}
+	);
+	
+	chrome.storage.local.get(['folksonomy_key'],function(result){
+		if(result.folksonomy_key != null){
+			$('#folksonomy_key').val(result.folksonomy_key);
+		}
+	}
+	);
+	
+	chrome.storage.local.get(['folksonomy_value'],function(result){
+		if(result.folksonomy_value != null){
+			$('#folksonomy_value').val(result.folksonomy_value);
 		}
 	}
 	);
@@ -287,31 +374,76 @@ function sendMassUpdate(){
 	
 	$('.massUpdateCheckbox').each(function(){
 		if($(this).is(':checked')){
-			var remote_url = api_url+"code="+$(this).attr("value")+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&"+selectedField+"=";
-			if(sField==='quantity'){
-				remote_url += encodeURIComponent($("#quantity").val());
-			}else{
-				remote_url += encodeURIComponent($('#tags').val());
-			}
-			
-			console.log("Sending Get request to "+remote_url+"\n");
-			 $.ajax({
-				type: "GET",
-				url: remote_url,
+			if(sField==='folksonomy'){
+				// Folksonomy API call
+				var barcode = $(this).attr("value");
+				var key = $("#folksonomy_key").val();
+				var value = $("#folksonomy_value").val();
 				
-				success: function (result) {
-					incrSuccessCounter();
-					productToUpdate--;
-					updateProductCounter();
-					if(productToUpdate <=0) $('#backButton').show();
-				},
-				error: function(){
+				if(!key || !value){
+					console.log("Folksonomy key or value is empty, skipping product "+barcode);
 					incrFailureCounter();
 					productToUpdate--;
 					updateProductCounter();
 					if(productToUpdate <=0) $('#backButton').show();
+					$(this).prop('checked',false);
+					return;
 				}
-			});
+				
+				var folksonomy_url = folksonomy_api_url + "/product/" + barcode + "/" + encodeURIComponent(key);
+				var folksonomy_data = {
+					"k": key,
+					"v": value
+				};
+				
+				console.log("Sending POST request to "+folksonomy_url+" with data: "+JSON.stringify(folksonomy_data)+"\n");
+				$.ajax({
+					type: "PUT",
+					url: folksonomy_url,
+					contentType: "application/json",
+					data: JSON.stringify(folksonomy_data),
+					
+					success: function (result) {
+						incrSuccessCounter();
+						productToUpdate--;
+						updateProductCounter();
+						if(productToUpdate <=0) $('#backButton').show();
+					},
+					error: function(){
+						incrFailureCounter();
+						productToUpdate--;
+						updateProductCounter();
+						if(productToUpdate <=0) $('#backButton').show();
+					}
+				});
+			}else{
+				// Original Open Food Facts API call
+				var remote_url = api_url+"code="+$(this).attr("value")+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&"+selectedField+"=";
+				if(sField==='quantity'){
+					remote_url += encodeURIComponent($("#quantity").val());
+				}else{
+					remote_url += encodeURIComponent($('#tags').val());
+				}
+				
+				console.log("Sending Get request to "+remote_url+"\n");
+				 $.ajax({
+					type: "GET",
+					url: remote_url,
+					
+					success: function (result) {
+						incrSuccessCounter();
+						productToUpdate--;
+						updateProductCounter();
+						if(productToUpdate <=0) $('#backButton').show();
+					},
+					error: function(){
+						incrFailureCounter();
+						productToUpdate--;
+						updateProductCounter();
+						if(productToUpdate <=0) $('#backButton').show();
+					}
+				});
+			}
 			
 			$(this).prop('checked',false);
 		}
@@ -327,6 +459,8 @@ function clearAllField(){
 	chrome.storage.local.clear();
 	$('#tags').importTags("");
 	$("#quantity").val("");
+	$("#folksonomy_key").val("");
+	$("#folksonomy_value").val("");
 	$("#champ > option[field='packaging']").prop("selected",true);
 	sField='packaging';
 	$('.massUpdateCheckbox').prop("checked",false);
