@@ -390,15 +390,21 @@ function sendMassUpdate(){
 					return;
 				}
 				
-				var folksonomy_url = folksonomy_api_url + "/product/" + barcode + "/" + encodeURIComponent(key);
+				var folksonomy_url = folksonomy_api_url + "/product";
 				var folksonomy_data = {
+					"product": barcode,
 					"k": key,
-					"v": value
+					"v": value,
+					"owner": "",
+					"version": 1,
+					"editor": "",
+					"last_edit": new Date().toISOString(),
+					"comment": ""
 				};
 				
 				console.log("Sending POST request to "+folksonomy_url+" with data: "+JSON.stringify(folksonomy_data)+"\n");
 				$.ajax({
-					type: "PUT",
+					type: "POST",
 					url: folksonomy_url,
 					contentType: "application/json",
 					data: JSON.stringify(folksonomy_data),
