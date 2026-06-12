@@ -3,7 +3,7 @@ var form_template = "<div id='form'>"
 					+"<div class='upBar'><input type='checkbox' id='selectAll' /><label for='selectAll'>&nbsp;Select All</label><div class='copyButton'>"+chrome.i18n.getMessage('copyLabel')+"</div></div>"
 					+"<div>"+chrome.i18n.getMessage('fieldToUpdateLabel')+"</div>" 
 				   +"<select id='champ'>"
-				   +"				<option value='packaging_add' field='packaging'>"+chrome.i18n.getMessage('packagingLabel')+"</option>"
+				   +"				<option value='add_packaging' field='packaging'>"+chrome.i18n.getMessage('packagingLabel')+"</option>"
 				    +"				<option value='add_brands' field='brands'>"+chrome.i18n.getMessage('brandsLabel')+"</option>"
 					+"				<option value='add_categories' field='categories'>"+chrome.i18n.getMessage('categoriesLabel')+"</option>"
 					+"				<option value='add_labels' field='labels'>"+chrome.i18n.getMessage('certificationsLabel')+"</option>"
@@ -34,6 +34,8 @@ var form_template = "<div id='form'>"
 					+chrome.i18n.getMessage('editLabel')+"<span id='pNumber'>0</span>"+chrome.i18n.getMessage('editNextLabel')
 					+"     <div class='counter'>"+chrome.i18n.getMessage('successLabel')+"&nbsp;<div id='sNumber'>0</div></div>"
 					+"     <div class='counter'>"+chrome.i18n.getMessage('failureLabel')+"&nbsp;<div id='eNumber'>0</div></div>"
+					+"     <div id='debugLog' style='display:none;margin-top:10px;max-height:120px;overflow-y:auto;font-size:11px;background:#fff3f3;border:1px solid #ccc;padding:6px;border-radius:4px;color:#333;'></div>"
+					+"     <div class='massFormButton debugButton'>Debug</div>"
 					+"	   <div id='backButton'> < "+chrome.i18n.getMessage('backLabel')+"</div>"
 					+"</div>";
 
@@ -186,8 +188,13 @@ function addingMassButton(){
 		$("#spinner").hide();
 		$('#selectAll').prop("checked",false);
 		$("#form").show();
+		$('#debugLog').hide().html('');
 		
 		resetCounter();
+	});
+	
+	$(".debugButton").click(function(){
+		$('#debugLog').toggle();
 	});
 	
 	$("#quantity").change(function(){
@@ -339,26 +346,33 @@ function sendMassUpdate(){
 	var checkedBoxes = $('.massUpdateCheckbox:checked');
 	var index = 0;
 
+	function logError(barcode, msg){
+		var safeBarcode = $('<span>').text(barcode).html();
+		var safeMsg = $('<span>').text(msg).html();
+		$('#debugLog').append('<div><b>'+safeBarcode+'</b>: '+safeMsg+'</div>');
+	}
+
 	function sendNext(){
 		if(index >= checkedBoxes.length) return;
 
 		var cb = $(checkedBoxes[index]);
 		index++;
+		var barcode = cb.attr("value");
 
 		if(sField === 'folksonomy'){
 			// Use Folksonomy Engine API
-			var barcode = cb.attr("value");
 			var fKey = $("#folksonomyKey").val();
 			var fValue = $("#folksonomyValue").val();
 			
 			$.ajax({
-				type: "PUT",
+				type: "POST",
 				url: folksonomy_api_url + "/product",
 				contentType: "application/json",
 				data: JSON.stringify({
 					product: barcode,
 					k: fKey,
-					v: fValue
+					v: fValue,
+					version: 1
 				}),
 				success: function (result) {
 					incrSuccessCounter();
@@ -366,8 +380,15 @@ function sendMassUpdate(){
 					updateProductCounter();
 					if(productToUpdate <=0) $('#backButton').show();
 				},
-				error: function(){
+				error: function(xhr){
 					incrFailureCounter();
+					var errMsg = xhr.status + ' ' + xhr.statusText;
+					if(xhr.responseJSON && xhr.responseJSON.detail){
+						errMsg += ' - ' + JSON.stringify(xhr.responseJSON.detail);
+					} else if(xhr.responseText){
+						errMsg += ' - ' + xhr.responseText.substring(0, 200);
+					}
+					logError(barcode, errMsg);
 					productToUpdate--;
 					updateProductCounter();
 					if(productToUpdate <=0) $('#backButton').show();
@@ -378,7 +399,7 @@ function sendMassUpdate(){
 			});
 		}else if(sField === 'product_type'){
 			// Use product API to set product_type
-			var remote_url = api_url+"code="+cb.attr("value")+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&product_type="+encodeURIComponent($("#productTypeSelect").val());
+			var remote_url = api_url+"code="+barcode+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&product_type="+encodeURIComponent($("#productTypeSelect").val());
 			
 			console.log("Sending Get request to "+remote_url+"\n");
 			$.ajax({
@@ -390,8 +411,9 @@ function sendMassUpdate(){
 					updateProductCounter();
 					if(productToUpdate <=0) $('#backButton').show();
 				},
-				error: function(){
+				error: function(xhr){
 					incrFailureCounter();
+					logError(barcode, xhr.status + ' ' + xhr.statusText + (xhr.responseText ? ' - ' + xhr.responseText.substring(0, 200) : ''));
 					productToUpdate--;
 					updateProductCounter();
 					if(productToUpdate <=0) $('#backButton').show();
@@ -401,7 +423,8 @@ function sendMassUpdate(){
 				}
 			});
 		}else{
-			var remote_url = api_url+"code="+cb.attr("value")+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&"+selectedField+"=";
+			// For packaging, use packaging_text_XX to add via text on platforms that may not support packaging_add
+			var remote_url = api_url+"code="+barcode+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&"+selectedField+"=";
 			if(sField==='quantity'){
 				remote_url += encodeURIComponent($("#quantity").val());
 			}else{
@@ -419,8 +442,9 @@ function sendMassUpdate(){
 					updateProductCounter();
 					if(productToUpdate <=0) $('#backButton').show();
 				},
-				error: function(){
+				error: function(xhr){
 					incrFailureCounter();
+					logError(barcode, xhr.status + ' ' + xhr.statusText + (xhr.responseText ? ' - ' + xhr.responseText.substring(0, 200) : ''));
 					productToUpdate--;
 					updateProductCounter();
 					if(productToUpdate <=0) $('#backButton').show();
