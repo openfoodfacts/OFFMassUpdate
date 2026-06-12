@@ -20,12 +20,14 @@
 		   "*://*.openfoodfacts.org/*",
 	    "*://*.openpetfoodfacts.org/*",
 	    "*://*.openproductsfacts.org/*",
-	    "*://*.openbeautyfacts.org/*"
+	    "*://*.openbeautyfacts.org/*",
+	    "*://openfoodfacts-explorer.vercel.app/*",
+	    "*://api.folksonomy.openfoodfacts.org/*"
     ],
 
     "content_scripts": [
         {
-      "matches": ["https://*.openfoodfacts.net/*","https://*.openfoodfacts.org/*","https://*.openpetfoodfacts.org/*","https://*.openproductsfacts.org/*","https://*.openbeautyfacts.org/*"],
+      "matches": ["https://*.openfoodfacts.net/*","https://*.openfoodfacts.org/*","https://*.openpetfoodfacts.org/*","https://*.openproductsfacts.org/*","https://*.openbeautyfacts.org/*","https://openfoodfacts-explorer.vercel.app/facets/*"],
 			"css": ["/css/myStyle.css","/css/external/jquery.tagsinput.css"],
 			"run_at": "document_end",
             "js": [
@@ -41,9 +43,16 @@
 	"web_accessible_resources": [
 		{
 			"resources": ["/img/*"],
-			"matches": ["https://*.openfoodfacts.net/*", "https://*.openfoodfacts.org/*", "https://*.openpetfoodfacts.org/*", "https://*.openproductsfacts.org/*", "https://*.openbeautyfacts.org/*"]
+			"matches": ["https://*.openfoodfacts.net/*", "https://*.openfoodfacts.org/*", "https://*.openpetfoodfacts.org/*", "https://*.openproductsfacts.org/*", "https://*.openbeautyfacts.org/*", "https://openfoodfacts-explorer.vercel.app/*"]
 		}
 	],
 
-    "manifest_version": 3
+    "manifest_version": 3,
+
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "off-mass-edit@openfoodfacts.org",
+            "strict_min_version": "109.0"
+        }
+    }
 }

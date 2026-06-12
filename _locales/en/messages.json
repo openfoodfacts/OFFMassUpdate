@@ -1,16 +1,16 @@
 ﻿{
 	"extName":{
-		"message":"Open*Facts Mass Updater",
+		"message":"Open Food Facts Mass Edit",
 		"description":"Extension name"
 	
 	},
 	"extDescription":{
-		"message":"Mass updating products on Open Food Facts, Open Beauty Facts, Open Pet Food Facts, and Open Products Facts",
+		"message":"Mass editing products on Open Food Facts, Open Beauty Facts, Open Pet Food Facts, and Open Products Facts",
 		"description":"Extension description"
 	},
 	
 	"extComment":{
-		"message":"Updated via Open*Facts Mass Updater",		
+		"message":"Updated via Open Food Facts Mass Edit",		
 		"description":"Sentence added by the API when updating"
 
 	},
@@ -27,7 +27,7 @@
 	},
 	
 	"packagingLabel":{
-		"message":"Packaging",
+		"message":"Packaging (add)",
 		"description":"Packaging label"
 	},
 
@@ -78,6 +78,26 @@
 		"description":"quantity label"
 	},
 	
+	"productTypeLabel":{
+		"message":"Product type",
+		"description":"product type label"
+	},
+	
+	"folksonomyLabel":{
+		"message":"Folksonomy property",
+		"description":"folksonomy label"
+	},
+	
+	"folksonomyKeyPlaceholder":{
+		"message":"Property key",
+		"description":"folksonomy key placeholder"
+	},
+	
+	"folksonomyValuePlaceholder":{
+		"message":"Property value",
+		"description":"folksonomy value placeholder"
+	},
+	
 	"editLabel":{
 		"message":"Editing of ",
 		"description":"Edit label"
@@ -95,7 +115,7 @@
 	
 	},
 	
-	"FailureLabel":{
+	"failureLabel":{
 		"message":"Failures",
 		"description":"failure label"
 	

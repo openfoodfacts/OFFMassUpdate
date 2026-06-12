@@ -1,8 +1,9 @@
 var form_template = "<div id='form'>"
+					+"<img class='massExtLogo' src='https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg' alt='Open Food Facts' />"
 					+"<div class='upBar'><input type='checkbox' id='selectAll' /><label for='selectAll'>&nbsp;Select All</label><div class='copyButton'>"+chrome.i18n.getMessage('copyLabel')+"</div></div>"
 					+"<div>"+chrome.i18n.getMessage('fieldToUpdateLabel')+"</div>" 
 				   +"<select id='champ'>"
-				   +"				<option value='add_packaging' field='packaging'>"+chrome.i18n.getMessage('packagingLabel')+"</option>"
+				   +"				<option value='packaging_add' field='packaging'>"+chrome.i18n.getMessage('packagingLabel')+"</option>"
 				    +"				<option value='add_brands' field='brands'>"+chrome.i18n.getMessage('brandsLabel')+"</option>"
 					+"				<option value='add_categories' field='categories'>"+chrome.i18n.getMessage('categoriesLabel')+"</option>"
 					+"				<option value='add_labels' field='labels'>"+chrome.i18n.getMessage('certificationsLabel')+"</option>"
@@ -12,9 +13,21 @@ var form_template = "<div id='form'>"
 					+"				<option value='add_stores' field='stores'>"+chrome.i18n.getMessage('storesLabel')+"</option>"
 					+"				<option value='add_countries' field='countries'>"+chrome.i18n.getMessage('countriesLabel')+"</option>"
 					+"				<option value='quantity' field='quantity'>"+chrome.i18n.getMessage('quantityLabel')+"</option>"
+					+"				<option value='product_type' field='product_type'>"+chrome.i18n.getMessage('productTypeLabel')+"</option>"
+					+"				<option value='folksonomy' field='folksonomy'>"+chrome.i18n.getMessage('folksonomyLabel')+"</option>"
 				    +"</select>"
 					+"<div id='tagsHidder'><input name='tags' id='tags' value='' /></div>"
 					+"<input name='quantity' id='quantity' type='text' value='' />"
+					+"<select id='productTypeSelect'>"
+					+"	<option value='food'>Food</option>"
+					+"	<option value='beauty'>Beauty</option>"
+					+"	<option value='petfood'>Pet Food</option>"
+					+"	<option value='product'>Product</option>"
+					+"</select>"
+					+"<div id='folksonomyFields'>"
+					+"	<input type='text' id='folksonomyKey' placeholder='"+chrome.i18n.getMessage('folksonomyKeyPlaceholder')+"' autocomplete='off' />"
+					+"	<input type='text' id='folksonomyValue' placeholder='"+chrome.i18n.getMessage('folksonomyValuePlaceholder')+"' autocomplete='off' />"
+					+"</div>"
 					+"<div class='massFormButton update'>Update</div>"
 					+"</div>"
 					+"<div id='spinner'>"
@@ -32,6 +45,7 @@ var ingredient_popup_template =   "<div class='popup_div'>"
 
 var api_url = location.protocol + '//' + location.host + "/cgi/product_jqm2.pl?";
 var api_autocomplete_url =  "/cgi/suggest.pl?";
+var folksonomy_api_url = "https://api.folksonomy.openfoodfacts.org";
 var sField='packaging';
 var lang='';
 var productToUpdate=0;
@@ -39,8 +53,8 @@ var productToUpdate=0;
 $(document).ready(function(){
 
 if(isConnected()){
-	if($(".products, .search_results").length){
-		lang = $("html").attr("lang")
+	if($(".products, .search_results").length || isExplorerFacetPage()){
+		lang = $("html").attr("lang") || 'en';
 		addingCheckBox();
 		addingIngredientsFormBtn();
 		addingMassButton();
@@ -62,6 +76,7 @@ if(isConnected()){
 		}
 		);
 		
+		initFolksonomyAutocomplete();
 		
 	}
 	
@@ -72,6 +87,10 @@ function isConnected(){
 	if($("input[name='user_id']").length) return false;
 	return true;
 
+}
+
+function isExplorerFacetPage(){
+	return location.hostname.indexOf('openfoodfacts-explorer') !== -1 && location.pathname.indexOf('/facets/') !== -1;
 }
 function addingCheckBox(){
 	console.log("Adding check box");
@@ -137,6 +156,8 @@ function addingMassButton(){
 	$("body").append("<div class='massUpdater'><div class='massButton'>&nbsp;</div><div class='massForms'>"+form_template+"</div></div>");
 	$('.massForms').hide();
 	$('#spinner').hide();
+	$('#productTypeSelect').hide();
+	$('#folksonomyFields').hide();
 	
 	
 	initValue();
@@ -144,7 +165,7 @@ function addingMassButton(){
 	$(".massButton").click(function(){
 		if($(".massForms").is(":hidden")){
 			$('.massForms').show();
-			$(".massButton").css("background-color","blue");
+			$(".massButton").css("background-color","#341100");
 			chrome.storage.local.set({"visible":true});
 			
 		}else{
@@ -154,6 +175,8 @@ function addingMassButton(){
 			
 			$("#tagsHidder").show();
 			$("#quantity").hide();
+			$('#productTypeSelect').hide();
+			$('#folksonomyFields').hide();
 		}
 	
 	});
@@ -200,9 +223,23 @@ function addingMassButton(){
 		if(sField==='quantity'){
 			$("#tagsHidder").hide();
 			$("#quantity").show();
+			$('#productTypeSelect').hide();
+			$('#folksonomyFields').hide();
+		}else if(sField==='product_type'){
+			$("#tagsHidder").hide();
+			$("#quantity").hide();
+			$('#productTypeSelect').show();
+			$('#folksonomyFields').hide();
+		}else if(sField==='folksonomy'){
+			$("#tagsHidder").hide();
+			$("#quantity").hide();
+			$('#productTypeSelect').hide();
+			$('#folksonomyFields').show();
 		}else{
 			$("#tagsHidder").show();
 			$("#quantity").hide();
+			$('#productTypeSelect').hide();
+			$('#folksonomyFields').hide();
 		
 		}
 	});
@@ -241,9 +278,23 @@ function initValue(){
 		if(sField==='quantity'){
 			$("#tagsHidder").hide();
 			$("#quantity").show();
+			$('#productTypeSelect').hide();
+			$('#folksonomyFields').hide();
+		}else if(sField==='product_type'){
+			$("#tagsHidder").hide();
+			$("#quantity").hide();
+			$('#productTypeSelect').show();
+			$('#folksonomyFields').hide();
+		}else if(sField==='folksonomy'){
+			$("#tagsHidder").hide();
+			$("#quantity").hide();
+			$('#productTypeSelect').hide();
+			$('#folksonomyFields').show();
 		}else{
 			$("#tagsHidder").show();
 			$("#quantity").hide();
+			$('#productTypeSelect').hide();
+			$('#folksonomyFields').hide();
 		
 		}
 		}
@@ -266,7 +317,7 @@ function initValue(){
 	chrome.storage.local.get(['visible'],function(result){
 		if(result.visible == true){
 			$('.massForms').show();
-			$(".massButton").css("background-color","blue");
+			$(".massButton").css("background-color","#341100");
 			
 		}else{
 			$('.massForms').hide();
@@ -294,34 +345,91 @@ function sendMassUpdate(){
 		var cb = $(checkedBoxes[index]);
 		index++;
 
-		var remote_url = api_url+"code="+cb.attr("value")+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&"+selectedField+"=";
-		if(sField==='quantity'){
-			remote_url += encodeURIComponent($("#quantity").val());
+		if(sField === 'folksonomy'){
+			// Use Folksonomy Engine API
+			var barcode = cb.attr("value");
+			var fKey = $("#folksonomyKey").val();
+			var fValue = $("#folksonomyValue").val();
+			
+			$.ajax({
+				type: "PUT",
+				url: folksonomy_api_url + "/product",
+				contentType: "application/json",
+				data: JSON.stringify({
+					product: barcode,
+					k: fKey,
+					v: fValue
+				}),
+				success: function (result) {
+					incrSuccessCounter();
+					productToUpdate--;
+					updateProductCounter();
+					if(productToUpdate <=0) $('#backButton').show();
+				},
+				error: function(){
+					incrFailureCounter();
+					productToUpdate--;
+					updateProductCounter();
+					if(productToUpdate <=0) $('#backButton').show();
+				},
+				complete: function(){
+					setTimeout(sendNext, 1000);
+				}
+			});
+		}else if(sField === 'product_type'){
+			// Use product API to set product_type
+			var remote_url = api_url+"code="+cb.attr("value")+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&product_type="+encodeURIComponent($("#productTypeSelect").val());
+			
+			console.log("Sending Get request to "+remote_url+"\n");
+			$.ajax({
+				type: "GET",
+				url: remote_url,
+				success: function (result) {
+					incrSuccessCounter();
+					productToUpdate--;
+					updateProductCounter();
+					if(productToUpdate <=0) $('#backButton').show();
+				},
+				error: function(){
+					incrFailureCounter();
+					productToUpdate--;
+					updateProductCounter();
+					if(productToUpdate <=0) $('#backButton').show();
+				},
+				complete: function(){
+					setTimeout(sendNext, 1000);
+				}
+			});
 		}else{
-			remote_url += encodeURIComponent($('#tags').val());
-		}
-
-		console.log("Sending Get request to "+remote_url+"\n");
-		$.ajax({
-			type: "GET",
-			url: remote_url,
-
-			success: function (result) {
-				incrSuccessCounter();
-				productToUpdate--;
-				updateProductCounter();
-				if(productToUpdate <=0) $('#backButton').show();
-			},
-			error: function(){
-				incrFailureCounter();
-				productToUpdate--;
-				updateProductCounter();
-				if(productToUpdate <=0) $('#backButton').show();
-			},
-			complete: function(){
-				setTimeout(sendNext, 1000);
+			var remote_url = api_url+"code="+cb.attr("value")+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&"+selectedField+"=";
+			if(sField==='quantity'){
+				remote_url += encodeURIComponent($("#quantity").val());
+			}else{
+				remote_url += encodeURIComponent($('#tags').val());
 			}
-		});
+
+			console.log("Sending Get request to "+remote_url+"\n");
+			$.ajax({
+				type: "GET",
+				url: remote_url,
+
+				success: function (result) {
+					incrSuccessCounter();
+					productToUpdate--;
+					updateProductCounter();
+					if(productToUpdate <=0) $('#backButton').show();
+				},
+				error: function(){
+					incrFailureCounter();
+					productToUpdate--;
+					updateProductCounter();
+					if(productToUpdate <=0) $('#backButton').show();
+				},
+				complete: function(){
+					setTimeout(sendNext, 1000);
+				}
+			});
+		}
 
 		cb.prop('checked',false);
 	}
@@ -334,6 +442,8 @@ function clearAllField(){
 	chrome.storage.local.clear();
 	$('#tags').importTags("");
 	$("#quantity").val("");
+	$("#folksonomyKey").val("");
+	$("#folksonomyValue").val("");
 	$("#champ > option[field='packaging']").prop("selected",true);
 	sField='packaging';
 	$('.massUpdateCheckbox').prop("checked",false);
@@ -360,4 +470,66 @@ function resetCounter(){
 	$("#eNumber").html("0");
 	$("#sNumber").html("0");
 	$("#pNumber").html("0");
+}
+
+function initFolksonomyAutocomplete(){
+	// Autocomplete for folksonomy key field
+	$('#folksonomyKey').on('input', function(){
+		var term = $(this).val();
+		if(term.length < 2) {
+			$('.folksonomy-suggestions.key-suggestions').remove();
+			return;
+		}
+		$.get(folksonomy_api_url + "/keys", function(data){
+			$('.folksonomy-suggestions.key-suggestions').remove();
+			var filtered = data.filter(function(item){
+				return item.k && item.k.toLowerCase().indexOf(term.toLowerCase()) !== -1;
+			}).slice(0, 10);
+			if(filtered.length === 0) return;
+			var html = "<div class='folksonomy-suggestions key-suggestions'>";
+			filtered.forEach(function(item){
+				html += "<div data-value='"+$('<span>').text(item.k).html()+"'>"+$('<span>').text(item.k).html()+"</div>";
+			});
+			html += "</div>";
+			$('#folksonomyKey').after(html);
+			$('.key-suggestions div').click(function(){
+				$('#folksonomyKey').val($(this).attr('data-value'));
+				$('.folksonomy-suggestions.key-suggestions').remove();
+			});
+		});
+	});
+
+	// Autocomplete for folksonomy value field
+	$('#folksonomyValue').on('input', function(){
+		var term = $(this).val();
+		var key = $('#folksonomyKey').val();
+		if(term.length < 2 || !key) {
+			$('.folksonomy-suggestions.value-suggestions').remove();
+			return;
+		}
+		$.get(folksonomy_api_url + "/keys/" + encodeURIComponent(key), function(data){
+			$('.folksonomy-suggestions.value-suggestions').remove();
+			var filtered = data.filter(function(item){
+				return item.v && item.v.toLowerCase().indexOf(term.toLowerCase()) !== -1;
+			}).slice(0, 10);
+			if(filtered.length === 0) return;
+			var html = "<div class='folksonomy-suggestions value-suggestions'>";
+			filtered.forEach(function(item){
+				html += "<div data-value='"+$('<span>').text(item.v).html()+"'>"+$('<span>').text(item.v).html()+"</div>";
+			});
+			html += "</div>";
+			$('#folksonomyValue').after(html);
+			$('.value-suggestions div').click(function(){
+				$('#folksonomyValue').val($(this).attr('data-value'));
+				$('.folksonomy-suggestions.value-suggestions').remove();
+			});
+		});
+	});
+
+	// Hide suggestions when clicking elsewhere
+	$(document).on('click', function(e){
+		if(!$(e.target).closest('#folksonomyFields').length){
+			$('.folksonomy-suggestions').remove();
+		}
+	});
 }
