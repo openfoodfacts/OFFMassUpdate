@@ -9,3 +9,19 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "monthly"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      linting:
+        patterns:
+          - "@commitlint/*"
+          - "eslint"
+      minor:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    open-pull-requests-limit: 30
