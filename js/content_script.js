@@ -285,41 +285,48 @@ function sendMassUpdate(){
 	
 	productToUpdate= $('.massUpdateCheckbox:checked').length;
 	
-	$('.massUpdateCheckbox').each(function(){
-		if($(this).is(':checked')){
-			var remote_url = api_url+"code="+$(this).attr("value")+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&"+selectedField+"=";
-			if(sField==='quantity'){
-				remote_url += encodeURIComponent($("#quantity").val());
-			}else{
-				remote_url += encodeURIComponent($('#tags').val());
-			}
-			
-			console.log("Sending Get request to "+remote_url+"\n");
-			 $.ajax({
-				type: "GET",
-				url: remote_url,
-				
-				success: function (result) {
-					incrSuccessCounter();
-					productToUpdate--;
-					updateProductCounter();
-					if(productToUpdate <=0) $('#backButton').show();
-				},
-				error: function(){
-					incrFailureCounter();
-					productToUpdate--;
-					updateProductCounter();
-					if(productToUpdate <=0) $('#backButton').show();
-				}
-			});
-			
-			$(this).prop('checked',false);
+	var checkedBoxes = $('.massUpdateCheckbox:checked');
+	var index = 0;
+
+	function sendNext(){
+		if(index >= checkedBoxes.length) return;
+
+		var cb = $(checkedBoxes[index]);
+		index++;
+
+		var remote_url = api_url+"code="+cb.attr("value")+"&lc="+lang+"&comment="+encodeURIComponent(chrome.i18n.getMessage("extComment"))+"&"+selectedField+"=";
+		if(sField==='quantity'){
+			remote_url += encodeURIComponent($("#quantity").val());
+		}else{
+			remote_url += encodeURIComponent($('#tags').val());
 		}
-	
-	
-	});
-	
-	
+
+		console.log("Sending Get request to "+remote_url+"\n");
+		$.ajax({
+			type: "GET",
+			url: remote_url,
+
+			success: function (result) {
+				incrSuccessCounter();
+				productToUpdate--;
+				updateProductCounter();
+				if(productToUpdate <=0) $('#backButton').show();
+			},
+			error: function(){
+				incrFailureCounter();
+				productToUpdate--;
+				updateProductCounter();
+				if(productToUpdate <=0) $('#backButton').show();
+			},
+			complete: function(){
+				setTimeout(sendNext, 1000);
+			}
+		});
+
+		cb.prop('checked',false);
+	}
+
+	sendNext();
 
 }
 
