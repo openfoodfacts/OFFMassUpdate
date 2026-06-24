@@ -81,7 +81,6 @@ function addingCheckBox(){
 		var myAnchor= $(this).parent().find("a");
 		var myHref = myAnchor.attr("href");
 		
-		//var myRe = /\/(\w+)\/(\d+)\/(\w+)/;
 		var myRe = /\/(\w+)\/(\d+)([\/|\w]*)/
 		var result = myRe.exec(myHref);
 		$(this).attr('value',result[2]);
