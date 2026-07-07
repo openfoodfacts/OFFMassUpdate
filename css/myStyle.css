@@ -2,13 +2,15 @@
     position:absolute;
     left:100px;
     top:100px;
-    background-color: blue;
-	opacity: .85;
+    background-color: #ffffff;
 	padding: 20px;
-	color: rgba(255,255,255,.9);
+	color: #333333;
     width:340px;
     min-height:150px;
     text-align:left;
+    border-radius: 12px;
+    border: 1px solid #000000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .massButton {
@@ -44,27 +46,29 @@
 
 
 .massForms{
-  background-color: blue;
-  opacity: .85;
+  background-color: #ffffff;
   padding: 20px;
-  color: rgba(255,255,255,.9);
+  color: #333333;
   position: fixed;
   top:80px;
   right:20px;
+  border-radius: 12px;
+  border: 1px solid #000000;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+  z-index: 9998;
 }
 
 .massFormButton{
-background-color: red;
+background-color: #341100;
   border: none;
   color: white;
-  padding: 2px;
+  padding: 6px 12px;
   text-align: center;
   text-decoration: none;
   display: block;
-  font-size: 16px;
-  color: white;
+  font-size: 14px;
   margin: 4px 2px;
-  width:25%;
+  width:auto;
   cursor:pointer;
   border-radius: 20px;
 }
@@ -76,18 +80,16 @@ background-color: red;
 	vertical-align:text-top;
 }
 .copyButton{
-  background-color: red;
+  background-color: #341100;
   border: none;
   color: white;
-  padding: 2px;
+  padding: 4px 10px;
   text-align: center;
   text-decoration: none;
   display: inline;
   float:right;
-  font-size: 16px;
-  color: white;
+  font-size: 14px;
  
-  width:25%;
   cursor:pointer;
   border-radius: 20px;
 }
@@ -115,13 +117,11 @@ background-color: red;
   display: float;
   float:right;
   font-size: 16px;
-  color: white;
   margin: 4px 2px;
   border-radius: 50%;
-  width:20px
-
-
+  width:20px;
 }
+
 #eNumber{
   background-color: red;
   border: none;
@@ -131,26 +131,70 @@ background-color: red;
   display: float;
   float:right;
   font-size: 16px;
-  color: white;
   margin: 4px 2px;
   border-radius: 50%;
-  width:20px
-  
-
+  width:20px;
 }
 
 #backButton{
-  background-color: red;
+  background-color: #341100;
   border: none;
   color: white;
-  padding: 2px;
+  padding: 6px 12px;
   text-align: center;
   text-decoration: none;
   display: block;
-  font-size: 16px;
-  color: white;
+  font-size: 14px;
   margin-top: 10px;
   width:50%;
   cursor:pointer;
   border-radius: 20px;
+}
+
+.massExtLogo{
+  display: block;
+  max-width: 180px;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+#folksonomyFields{
+  margin-top: 8px;
+}
+
+#folksonomyFields input{
+  width: 100%;
+  padding: 4px;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#productTypeSelect{
+  width: 100%;
+  padding: 4px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.folksonomy-suggestions{
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 10000;
+  width: 200px;
+}
+
+.folksonomy-suggestions div{
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.folksonomy-suggestions div:hover{
+  background-color: #f0f0f0;
 }
