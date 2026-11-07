@@ -1,3 +1,18 @@
+# This is a tool used for Data Completion on Open Food Facts.
+* Please use it with care, and join the internal Slack channel before using it, as it can create non-quality quickly.
+
+* We have created a Chrome extension to allow bulk modifications to Open Food Facts
+* Very concretely, you can install it, go to a page of similar products obtained from the advanced search
+* eg. products containing the term "lobster rillettes" that are not categorized
+* You click on select all, uncheck any intruder products, and you can add the category Lobster Rillettes (or de: ) to all these checked products
+* the installation requires some manipulation for the moment, but it's worth it
+* It works well in coordination with the [Power User Script](https://github.com/openfoodfacts/power-user-script)
+* It does not currently work with Open Food Facts explorer
+
+# Screenshot
+<img width="1020" height="1088" alt="image" src="https://github.com/user-attachments/assets/d6796084-c5b2-4d91-90e6-98cebfea78c7" />
+
+
 # Installation on Chrome
 * Fork the repo
 * Start Chrome
