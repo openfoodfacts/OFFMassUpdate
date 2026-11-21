@@ -198,3 +198,7 @@ background-color: #341100;
 .folksonomy-suggestions div:hover{
   background-color: #f0f0f0;
 }
+
+.ui-autocomplete{
+  z-index: 10000 !important;
+}
